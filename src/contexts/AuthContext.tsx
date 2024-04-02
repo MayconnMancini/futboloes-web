@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 const { api } = apiClient;
 import { apiClient } from "@/services/api";
 import { useRouter } from "next/navigation";
+import { loginFutboloes } from "@/services/login";
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -69,14 +70,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function signIn(email: string, senha: string) {
     try {
       //setIsUserLoading(true);
-      const tokenResponse = await api.post("/login", {
-        email: email,
-        senha: senha,
-      });
+
+      const tokenResponse = await loginFutboloes(email, senha);
 
       console.log("tokenResponse", tokenResponse);
 
-      if (!tokenResponse.data) {
+      if (!tokenResponse?.data) {
         throw new Error("Erro ao fazer login");
       }
 
