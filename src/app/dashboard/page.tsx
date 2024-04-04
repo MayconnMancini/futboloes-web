@@ -1,4 +1,5 @@
 "use client";
+import JoinBolao from "@/components/bolao/JoinBolao";
 import { AuthContext } from "@/contexts/AuthContext";
 import { apiClient } from "@/services/api";
 
@@ -33,7 +34,17 @@ export default function Dashboard() {
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div>
           {/* Your content */}
-          <p>Bem vindo ao Futbolões {user?.nome}</p>
+          <h3 className=" text-zinc-700 font-semibold ">
+            Bem vindo ao Futbolões {user?.nome}
+          </h3>
+
+          <p className="text-base text-green-600 mt-2">
+            Ainda não participa de um bolão? Digite o código do Bolão abaixo e
+            comece a sua disputa!{" "}
+          </p>
+          <section className="mt-6">
+            <JoinBolao />
+          </section>
         </div>
       </main>
     </div>
