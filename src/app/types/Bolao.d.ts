@@ -47,3 +47,8 @@ type JogoBolaoProps = {
   jogo: JogoProps;
   palpite: null | PalpiteProps;
 };
+
+type RodadasProps = {
+  rodada: number;
+  data: string;
+};
