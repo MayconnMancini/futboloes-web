@@ -1,9 +1,132 @@
+"use client";
 import Link from "next/link";
+import InputMask from "react-input-mask";
+import {
+  Button,
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  message,
+  Row,
+  Select,
+} from "antd";
+
+import { useCallback, useEffect, useState } from "react";
+import { maskPhone } from "@/utils/maskPhone";
+import { apiCidades } from "@/services/axios";
+const { Option } = Select;
+
+import { apiClient } from "@/services/api";
+const { api } = apiClient;
+
+export type Estados = {
+  "UF-id": number;
+  "UF-sigla": string;
+  "UF-nome": string;
+  "regiao-id": string;
+  "regiao-sigla": string;
+  "regiao-nome": string;
+};
+
+export type Cidades = {
+  "municipio-id": string;
+  "municipio-nome": string;
+};
 
 export default function Signup() {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [data, setData] = useState<CreateUser>();
+  const [form] = Form.useForm();
+  const [estados, setEstados] = useState<Estados[]>([]);
+  const [cidades, setCidades] = useState<Cidades[]>([]);
+  const [estadoSelected, setEstadoSelected] = useState<Estados>();
+
+  async function handleSignUp() {
+    try {
+      setIsLoading(true);
+      const resp = await api.post("/signup", {
+        nome: data?.nome,
+        email: data?.email,
+        senha: data?.senha,
+        cidade: data?.cidade,
+        estado: data?.estado,
+        telefone: data?.telefone?.replace(/\D/g, ""),
+      });
+
+      if (resp) {
+        message.success(resp.data.message, 10);
+        form.resetFields();
+        setData({});
+      }
+
+      // redirecionar para a tela de login
+    } catch (error) {
+      console.log(error);
+      message.error(error?.response?.data?.message, 5);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const handleChangePhone = useCallback(
+    (e: any, prop: string) => {
+      setData({ ...data, [prop]: e.target.value });
+      form.setFieldValue(prop, e.target.value);
+    },
+    [data]
+  );
+
+  async function getEstados() {
+    try {
+      const response = await apiCidades.get(
+        "localidades/estados?orderBy=nome&view=nivelado"
+      );
+      if (response) {
+        setEstados(response.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function getCidades(estadoSelected: any) {
+    try {
+      if (estadoSelected) {
+        const response = await apiCidades.get(
+          `localidades/estados/${estadoSelected["UF-id"]}/municipios?view=nivelado`
+        );
+
+        if (response) {
+          setCidades(response.data);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function setEstadoSelecionado(sigla: any) {
+    const estado = estados.find((item) => {
+      return item["UF-sigla"] == sigla;
+    });
+
+    if (estado) {
+      setData({ ...data, estado: estado["UF-sigla"], cidade: "" });
+      setEstadoSelected(estado);
+    }
+  }
+
+  useEffect(() => {
+    getEstados();
+  }, []);
+
+  useEffect(() => {
+    getCidades(estadoSelected);
+  }, [estadoSelected]);
+
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 pt-2 pb-12 lg:px-8">
-
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <img
           className="mx-auto h-10 w-auto"
@@ -16,137 +139,176 @@ export default function Signup() {
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form className="space-y-6" action="#" method="POST">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-              Email
-            </label>
-            <div className="mt-2">
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
+        <Form
+          form={form}
+          autoComplete="off"
+          layout="vertical"
+          onFinish={handleSignUp}
+        >
+          <Form.Item
+            labelAlign="right"
+            label={
+              <label style={{ color: "rgb(17 24 39)", fontWeight: "500" }}>
+                Nome
+              </label>
+            }
+            name="name"
+            rules={[
+              { required: true, message: "Por favor, preencha com o nome" },
+            ]}
+          >
+            <Input
+              size="middle"
+              value={data?.nome}
+              onChange={(e) => setData({ ...data, nome: e.target.value })}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={
+              <label style={{ color: "rgb(17 24 39)", fontWeight: "500" }}>
+                Email
+              </label>
+            }
+            name="email"
+            rules={[
+              {
+                required: true,
+                message: "Por favor, preencha com o e-mail",
+              },
+              {
+                type: "email",
+                message: "Por favor, informe um e-mail válido",
+              },
+            ]}
+          >
+            <Input
+              value={data?.email}
+              onChange={(e) => setData({ ...data, email: e.target.value })}
+              size="middle"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={
+              <label style={{ color: "rgb(17 24 39)", fontWeight: "500" }}>
+                Telefone
+              </label>
+            }
+            name="telefone"
+            rules={[
+              {
+                required: true,
+                message: "Por favor, selecione o telefone do contato",
+              },
+            ]}
+          >
+            <InputMask
+              // mask={maskPhone(data?.telefone)}
+              mask="(99) 9 9999-9999"
+              maskChar=""
+              value={data?.telefone}
+              onChange={(e) => handleChangePhone(e, "telefone")}
+            >
+              {
+                // @ts-ignore
+                () => <Input size="middle" />
+              }
+            </InputMask>
+          </Form.Item>
+
+          <Form.Item
+            label={
+              <label style={{ color: "rgb(17 24 39)", fontWeight: "500" }}>
+                Estado
+              </label>
+            }
+            name="estado"
+          >
+            <div>
+              <Select
+                showSearch
+                style={{ minWidth: "150px" }}
+                placeholder="Selecione o estado"
+                optionFilterProp="children"
+                onChange={(e) => setEstadoSelecionado(e)}
+                value={data?.estado}
+                options={estados.map((d) => ({
+                  value: d["UF-sigla"],
+                  label: d["UF-nome"],
+                }))}
+              ></Select>
             </div>
-          </div>
+          </Form.Item>
 
-          <div>
-            <label htmlFor="nome" className="block text-sm font-medium leading-6 text-gray-900">
-              Nome
-            </label>
-            <div className="mt-2">
-              <input
-                id="nome"
-                name="nome"
-                type="string"
-                required
-                className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
+          <Form.Item
+            label={
+              <label style={{ color: "rgb(17 24 39)", fontWeight: "500" }}>
+                Cidade
+              </label>
+            }
+            name="cidade"
+          >
+            <div>
+              <Select
+                showSearch
+                style={{ minWidth: "150px" }}
+                placeholder="Selecione a cidade"
+                optionFilterProp="children"
+                onChange={(e) => {
+                  setData({ ...data, cidade: e });
+                }}
+                value={data?.cidade}
+                options={cidades?.map((d) => ({
+                  value: d["municipio-nome"],
+                  label: d["municipio-nome"],
+                }))}
+              ></Select>
             </div>
-          </div>
+          </Form.Item>
 
-          <div>
-            <label htmlFor="telefone" className="block text-sm font-medium leading-6 text-gray-900">
-              Telefone
-            </label>
-            <div className="mt-2">
-              <input
-                id="telefone"
-                name="telefone"
-                type="string"
-                required
-                className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="estado" className="block text-sm font-medium leading-6 text-gray-900">
-              Estado
-            </label>
-            <div className="mt-2">
-              <input
-                id="estado"
-                name="estado"
-                type="string"
-                required
-                className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="cidade" className="block text-sm font-medium leading-6 text-gray-900">
-              Cidade
-            </label>
-            <div className="mt-2">
-              <input
-                id="cidade"
-                name="cidade"
-                type="string"
-                required
-                className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-
-          <div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
+          <Form.Item
+            labelAlign="right"
+            label={
+              <label style={{ color: "rgb(17 24 39)", fontWeight: "500" }}>
                 Senha
               </label>
-            </div>
-            <div className="mt-2">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
+            }
+            name="senha"
+            rules={[
+              { required: true, message: "Por favor, preencha com a senha" },
+            ]}
+          >
+            <Input.Password
+              size="middle"
+              value={data?.senha}
+              onChange={(e) => setData({ ...data, senha: e.target.value })}
+            />
+          </Form.Item>
 
-          <div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="password_confirm" className="block text-sm font-medium leading-6 text-gray-900">
-                Confirme a senha
-              </label>
-            </div>
-            <div className="mt-2">
-              <input
-                id="password_confirm"
-                name="password_confirm"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          <Form.Item>
+            <Button
+              size="large"
+              type="primary"
+              loading={isLoading}
+              htmlType="submit"
+              style={{ width: "100%" }}
             >
               Cadastrar
-            </button>
-          </div>
-        </form>
+            </Button>
+          </Form.Item>
+        </Form>
 
         <p className="mt-10 text-center text-sm text-gray-500">
-          Ainda não possui uma conta?{' '}
-          <Link href="/" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
+          Já possui uma conta?{" "}
+          <Link
+            href="/"
+            className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
+          >
             Fazer login
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }

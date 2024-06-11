@@ -8,7 +8,6 @@ import { parseCookies, setCookie } from "nookies";
 export function setupToken(api: AxiosInstance, ctx: any = undefined) {
   api.interceptors.request.use(function (config) {
     const { "futboloes.token": token } = parseCookies(ctx);
-    console.log("futboloes.token", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,3 +25,7 @@ export function setupAPIClient(ctx: any = undefined) {
 
   return { api };
 }
+
+export const apiCidades = axios.create({
+  baseURL: "https://servicodados.ibge.gov.br/api/v1/",
+});
