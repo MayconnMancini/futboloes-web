@@ -15,6 +15,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { maskPhone } from "@/utils/maskPhone";
 import { apiCidades } from "@/services/axios";
+import { useRouter } from "next/navigation";
 const { Option } = Select;
 
 import { apiClient } from "@/services/api";
@@ -42,6 +43,8 @@ export default function Signup() {
   const [cidades, setCidades] = useState<Cidades[]>([]);
   const [estadoSelected, setEstadoSelected] = useState<Estados>();
 
+  const router = useRouter();
+
   async function handleSignUp() {
     try {
       setIsLoading(true);
@@ -58,9 +61,8 @@ export default function Signup() {
         message.success(resp.data.message, 10);
         form.resetFields();
         setData({});
+        router.push("/");
       }
-
-      // redirecionar para a tela de login
     } catch (error) {
       console.log(error);
       message.error(error?.response?.data?.message, 5);
@@ -233,11 +235,19 @@ export default function Signup() {
                 optionFilterProp="children"
                 onChange={(e) => setEstadoSelecionado(e)}
                 value={data?.estado}
-                options={estados.map((d) => ({
-                  value: d["UF-sigla"],
-                  label: d["UF-nome"],
-                }))}
-              ></Select>
+              >
+                {estados &&
+                  estados?.map((estado) => {
+                    return (
+                      <Option
+                        key={estado["UF-sigla"]}
+                        value={estado["UF-sigla"]}
+                      >
+                        {estado["UF-nome"]}
+                      </Option>
+                    );
+                  })}
+              </Select>
             </div>
           </Form.Item>
 
@@ -253,17 +263,26 @@ export default function Signup() {
               <Select
                 showSearch
                 style={{ minWidth: "150px" }}
-                placeholder="Selecione a cidade"
+                placeholder="Selecione um bolão"
                 optionFilterProp="children"
                 onChange={(e) => {
+                  console.log("e=> ", e);
                   setData({ ...data, cidade: e });
                 }}
                 value={data?.cidade}
-                options={cidades?.map((d) => ({
-                  value: d["municipio-nome"],
-                  label: d["municipio-nome"],
-                }))}
-              ></Select>
+              >
+                {cidades &&
+                  cidades?.map((cidade) => {
+                    return (
+                      <Option
+                        key={cidade["municipio-nome"]}
+                        value={cidade["municipio-nome"]}
+                      >
+                        {cidade["municipio-nome"]}
+                      </Option>
+                    );
+                  })}
+              </Select>
             </div>
           </Form.Item>
 

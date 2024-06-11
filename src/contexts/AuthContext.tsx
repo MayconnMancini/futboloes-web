@@ -41,7 +41,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    console.log("use effect auth context");
     getUserInfo();
   }, []);
 
