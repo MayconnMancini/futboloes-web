@@ -9,6 +9,11 @@ export async function loginFutboloes(email: string, senha: string) {
       senha: senha,
     });
   } catch (error) {
-    message.error(error.response);
+    console.log("error ==> ", error);
+    message.error(
+      error?.response?.data?.message ??
+        error?.message ??
+        `${api.getUri()} - Erro na requisicao`
+    );
   }
 }

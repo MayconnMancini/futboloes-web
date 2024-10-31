@@ -7,6 +7,7 @@ const { api } = apiClient;
 import { apiClient } from "@/services/api";
 import { useRouter } from "next/navigation";
 import { loginFutboloes } from "@/services/login";
+import { message } from "antd";
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -96,7 +97,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       router.push("/dashboard");
     } catch (error: any) {
-      console.log("erro => " + error.response?.data?.message);
+      message.error(error.message);
+
       //alert(error.response?.data?.message)
       //throw error;
       /*
