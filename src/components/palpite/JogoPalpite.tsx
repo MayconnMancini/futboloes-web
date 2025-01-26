@@ -56,8 +56,6 @@ export function JogoPalpite({ data, index }: RankingItemProps) {
         }
       );
 
-      console.log("response", response);
-
       if (!response) {
         message.error("Falha ao fazer palpite");
         setIsLoading(false);
@@ -107,7 +105,7 @@ export function JogoPalpite({ data, index }: RankingItemProps) {
           flexDirection: "column",
         }}
       >
-        <p className="text-gray-700">
+        <p className="text-gray-700 font-semibold text-lg">
           {dataLocal.jogo.timeCasa} vs. {dataLocal.jogo.timeFora}
         </p>
         <span className="text-sm">{when}</span>
@@ -137,6 +135,10 @@ export function JogoPalpite({ data, index }: RankingItemProps) {
                   style={{ margin: 0, padding: 0 }}
                 >
                   <Input
+                    disabled={
+                      dayjs().format() >
+                      dayjs(dataLocal.jogo.data).locale(ptBR).format()
+                    }
                     className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                     id="golTimeCasa"
@@ -161,6 +163,10 @@ export function JogoPalpite({ data, index }: RankingItemProps) {
                   style={{ margin: 0, padding: 0 }}
                 >
                   <Input
+                    disabled={
+                      dayjs().format() >
+                      dayjs(dataLocal.jogo.data).locale(ptBR).format()
+                    }
                     className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                     id="golTimeFora"
@@ -221,6 +227,65 @@ export function JogoPalpite({ data, index }: RankingItemProps) {
                     : "Palpitar"}
                 </Button>
               </Form.Item>
+            </Col>
+
+            <hr />
+
+            <Col xs={24}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  //alignItems: "center",
+                  borderTop: "1px solid #efefef",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flexDirection: "column",
+                  }}
+                >
+                  <p>Resultado</p>
+                  <div style={{ fontWeight: "bold" }}>
+                    <>
+                      {dataLocal?.jogo?.resultGolTimeCasa !== null ? (
+                        <>
+                          <span>{dataLocal?.jogo?.resultGolTimeCasa}</span>
+                          <span>{` X `}</span>
+                          <span>{dataLocal?.jogo?.resultGolTimeFora}</span>
+                        </>
+                      ) : null}
+                    </>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flexDirection: "column",
+                  }}
+                >
+                  <p className="">Pontos</p>
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      color:
+                        dataLocal.palpite?.pontuacao == 21
+                          ? "green"
+                          : dataLocal.palpite?.pontuacao == 10
+                          ? "blue"
+                          : "red",
+                    }}
+                  >
+                    <span>{dataLocal.palpite?.pontuacao}</span>
+                  </div>
+                </div>
+              </div>
             </Col>
           </Row>
         </Form>
